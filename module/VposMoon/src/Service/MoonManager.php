@@ -49,21 +49,21 @@ class MoonManager
      *
      * @var string
      */
-    private $moon_scan_headline_regexp = '/^\s?+(Moon|Mond|Луна|Lune)/';
+    private const MOON_SCAN_HEADLINE_REGEXP = '/^\s?+(Moon|Mond|Луна|Lune)/';
 
     /**
      * Regular Expression to identify a Moon/Survey line with the Moon name
      *
      * @var string
      */
-    private $moon_scan_moonline_regexp = '/^[a-zA-Z0-9\-]+\b\s+[IVX]{1,4}\s-\s(Moon|Mond|Луна|Lune)\b\s[1-9]{1,2}(\*)?/';
+    private const MOON_SCAN_MOONLINE_REGEXP = '/^[a-zA-Z0-9\-]+\b\s+[IVX]{1,4}\s-\s(Moon|Mond|Луна|Lune)\b\s[1-9]{1,2}(\*)?/';
 
     /**
      * Regular Expression to identify a Moon/Survey data-line (that's what we're looking for)
      *
      * @var string
      */
-    private $moon_scan_gooline_regexp = '/^\s+[A-Za-z \*]+\s+(0\.[0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)/';
+    private const MOON_SCAN_GOOLINE_REGEXP = '/^\s+[A-Za-z \*]+\s+(0\.[0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)/';
 
     /**
      * To collect moon goo data
@@ -109,16 +109,11 @@ class MoonManager
         // strip all XML Tags (<localized hint="F-8Y13 II - Moon 1">
         $clean_line = strip_tags($line);
 
-        $line_arr = explode("\t", $clean_line);
-
-        // $this->logger->debug('Check Line __' . $clean_line . '__');
-
-
-        if (count($line_arr) == 7 && preg_match($this->moon_scan_headline_regexp, $clean_line)) {
+        if (preg_match(MoonManager::MOON_SCAN_HEADLINE_REGEXP, $clean_line)) {
             return (true);
-        } elseif (preg_match($this->moon_scan_moonline_regexp, $clean_line)) {
+        } elseif (preg_match(MoonManager::MOON_SCAN_MOONLINE_REGEXP, $clean_line)) {
             return (true);
-        } elseif (preg_match($this->moon_scan_gooline_regexp, $clean_line, $matches)) {
+        } elseif (preg_match(MoonManager::MOON_SCAN_GOOLINE_REGEXP, $clean_line, $matches)) {
             $this->collectGoo($matches['1'], $matches['2'], $matches['5']);
             return (true);
         }
@@ -127,16 +122,29 @@ class MoonManager
 
     /**
      * Process the data collected - stores Moon Goo data
+     *
+     * @return array 'moons' for moons scanned, 'goo' for types of goo found
      */
     public function processScan()
     {
+        $moon_cnt = array();
+        $goo_cnt = array();
+
         if (!empty($this->data_collector)) {
             foreach ($this->data_collector as $moon => $goo) {
                 // assure the AtMoon entry exist to add goo to him
                 $moon_id = $this->writeMoon($moon);
                 $this->persistMoonGoo($moon_id, $moon, $goo);
+
+                $moon_cnt[] = $moon_id;
+                $goo_cnt = $goo_cnt + $goo;
             }
+            $res_arr = array(
+                'moons' => count($moon_cnt),
+                'goo' => count($goo_cnt)
+            );
         }
+        return($res_arr);
     }
 
     /**
@@ -447,6 +455,26 @@ class MoonManager
         return ($res);
     }
 
+    /**
+     * Delete all moongoo for the given moon.
+     *
+     * @param integer $moonid
+     * @return bool true on success
+     */
+    public function deleteGoo($moonid = 0) {
+
+        if(!$moonid || !is_int($moonid) || $moonid == 0) {
+            return false;
+        }
+
+        $queryBuilder = $this->entityManager->createQueryBuilder();
+        $queryBuilder->delete(\VposMoon\Entity\AtMoongoo::class, 'mg')
+            ->where('mg.moon = :moonid')
+            ->setParameter('moonid', $moonid);
+        $queryBuilder->getQuery()->execute();
+
+        return true;
+    }
 
     public function ping($param = '')
     {

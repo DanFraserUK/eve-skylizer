@@ -1,6 +1,6 @@
 $(document).ready(function () {
     if (typeof current_route === 'undefined') {
-        current_route = 'vposmoon';
+        var current_route = 'vposmoon';
     }
 
     // form autosubmit on paste data
@@ -79,11 +79,18 @@ $(document).ready(function () {
         return markup;
     }
 
+    //datatable for admin views
+    var admin_table = $('#admintable').DataTable({
+        fixedHeader: true,
+        "lengthMenu": [ [25, 50, 100, -1], [25, 50, 100, "All"] ]
+    });
+    admin_table.fixedHeader.headerOffset($('#skylizer_navbar').height());
 
     //datatable for moonTable
     var moon_table = $('#moontable').DataTable({
         fixedHeader: true,
-        responsive: true
+        responsive: true,
+        "lengthMenu": [ [25, 50, 100, -1], [25, 50, 100, "All"] ]
     });
     moon_table.fixedHeader.headerOffset($('#skylizer_navbar').height());
 
@@ -376,7 +383,7 @@ $(document).ready(function () {
     /*
      * Typeahead fetcher for System selector
     */
-   systemtypedata = [
+   var systemtypedata = [
     { id: "-7", itemid: "-7", itemname: "High", constellation: "", constellationid: "", region: "", regionid: "", classidH: null, classidL: "7" },
     { id: "-8", itemid: "-8", itemname: "Low", constellation: "", constellationid: "", region: "", regionid: "", classidH: null, classidL: "8" },
     { id: "-9", itemid: "-9", itemname: "Null", constellation: "", constellationid: "", region: "", regionid: "", classidH: null, classidL: "9" },
@@ -554,7 +561,7 @@ $(document).ready(function () {
      */
     $('#structureDeleteFormSubmit').click(function () {
 
-        delid = $('#structureEditFormStructureId').val();
+        var delid = $('#structureEditFormStructureId').val();
 
         if (!delid) {
             return;
@@ -605,7 +612,8 @@ $(document).ready(function () {
                 });
             },
             complete: function (e) {
-                location.reload(); // no complex auto update page yet
+                //location.reload(); // no complex auto update page yet
+                location.href = location.href; // reload without re-posting
                 //$('#structureEditModal').modal('hide');
                 //$("#structureEditModal").unblock();
             },
@@ -640,7 +648,7 @@ $(document).ready(function () {
                         text: Object.values(val).toString(),
                         heading: '',
                         icon: 'info',
-                        hideAfter: 1500,
+                        hideAfter: 5000,
                         position: 'top-right',
                         loader: true,
                         loaderBg: '#4e433c'
@@ -651,7 +659,7 @@ $(document).ready(function () {
                         text: Object.values(val).toString(),
                         heading: '',
                         icon: 'success',
-                        hideAfter: 1500,
+                        hideAfter: 5000,
                         position: 'top-right',
                         loader: true,
                         loaderBg: '#4e433c'
@@ -662,7 +670,7 @@ $(document).ready(function () {
                         text: Object.values(val).toString(),
                         heading: '',
                         icon: 'warning',
-                        hideAfter: 2500,
+                        hideAfter: 5000,
                         position: 'top-right',
                         loader: true,
                         loaderBg: '#4e433c'
@@ -673,7 +681,7 @@ $(document).ready(function () {
                         text: Object.values(val).toString(),
                         heading: 'ERROR',
                         icon: 'error',
-                        hideAfter: 5000,
+                        hideAfter: 15000,
                         position: 'top-right',
                         loader: true,
                         loaderBg: '#4e433c'

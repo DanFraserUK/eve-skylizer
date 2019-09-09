@@ -89,7 +89,7 @@ class MoonController extends AbstractActionController
                 // Get filtered and validated data
                 $data = $form->getData();
                 // store input to text file, one file per user per day
-                file_put_contents('./data/storage/' . date('ymd') . '_' . $this->currentUser()->getEveUserid() . '.txt', $data['scan'] . PHP_EOL, FILE_APPEND);
+                file_put_contents('./data/storage/' . date('ymd') . '_' . $this->currentUser()->getEveUserid() . '.txt', escapeshellcmd ($data['scan']) . PHP_EOL, FILE_APPEND);
 
                 // process the scan
                 $pc_res = $this->scanManager->processScan($data['scan'], $this->currentUser()->getEveUserid());
@@ -138,7 +138,7 @@ class MoonController extends AbstractActionController
     }
 
     /**
-     * Initiate a Price Update from Console     Application
+     * Initiate a Price Update from Console Application
      *
      * @see \Application\Service\EveDataManager::updatePrices()
      *
@@ -146,7 +146,19 @@ class MoonController extends AbstractActionController
      */
     public function priceUpdateConsole()
     {
-        return $this->eveDataManager->updatePrices();
+        return $this->eveDataManager->updatePricesFromEveAPI();
+    }
+    
+    /**
+     * Initiate a Price Update via Evepraisal from Console Application
+     *
+     * @see \Application\Service\EveDataManager::updatePrices()
+     *
+     * @return ViewModel
+     */
+    public function priceEpUpdateConsole()
+    {
+        return $this->eveDataManager->updatePricesFromEvepraisal();
     }
 
     /**
@@ -236,7 +248,7 @@ class MoonController extends AbstractActionController
         $params = $this->params()->fromPost();
 
         // @ todo : add/edit spec for any kind of structure
-        $this->logger->debug('editStructureAction() ' . print_r($params, true));
+        // $this->logger->debug('editStructureAction() ' . print_r($params, true));
 
         if (isset($params['structureid'])) {
             // @todo this logic belongs to the ScanManager
@@ -427,74 +439,11 @@ class MoonController extends AbstractActionController
      */
     public function deleteAction()
     {
-        $id = (int) $this->params()->fromRoute('id', 0);
+        $moonid = (int) $this->params()->fromRoute('id', 0);
+        $this->logger->debug('someeone removed the goo from moon (' . $moonid . ')');
 
-        $this->logger->debug('someeone tries to delete a moon (' . $id . ')');
+        $this->moonManager->deleteGoo($moonid);
 
         return $this->redirect()->toRoute('vposmoon', ['action' => 'index']);
-    }
-
-    public function ping($msg, $what = null)
-    {
-        echo 'PING MoonController with msg: ' . $msg . PHP_EOL;
-
-        switch ($what) {
-            case 'EveDataManager':
-                echo 'PING MoonController ping to: EveDataManager' . PHP_EOL;
-                return ($this->eveDataManager->ping($msg));
-                break;
-            case 'MoonManager':
-                echo 'PING MoonController ping to: MoonManager' . PHP_EOL;
-                return ($this->moonManager->ping($msg));
-                break;
-            case 'CosmicManager':
-                echo 'PING MoonController ping to: CosmicManager' . PHP_EOL;
-                return ($this->cosmicManager->ping($msg));
-                break;
-        }
-        return (false);
-    }
-
-    /**
-     * No functional code but helps me to write better code then below
-     */
-    private function codeCollection()
-    {
-        ;
-        //        $this->moonManager->addMoonGoo();
-        //        $res = $this->cosmicManager->test(16);
-        //        var_dump( \Doctrine\Common\Util\Debug::export($res, 4));
-        //        $this->logger->notice($res->getCosmicMain()->getGroupNameDe());
-        //$this->logger->notice(var_export($res, true));
-        //echo('<pre>');
-        //        \Doctrine\Common\Util\Debug::dump($res);
-        //        \Doctrine\Common\Util\Debug::dump($res->getCosmicMain()->getType());
-        //        \Doctrine\Common\Util\Debug::dump($res->getCosmicMain()->getGroupid()->getGroupname());
-        //        \Doctrine\Common\Util\Debug::dump($res->getCosmicMain()->getGroupid());
-        //        \Doctrine\Common\Util\Debug::dump($res,5);
-        //        $res = $this->cosmicManager->test2(197);
-        //echo('<pre>');
-        //        \Doctrine\Common\Util\Debug::dump($res);
-        //        $res = $this->cosmicManager->test3(2);
-        //
-        ////\Doctrine\Common\Util\Debug::dump($moon_entity);
-        //$this->entityManager->getRepository(\Application\Entity\Invtypes::class)->findOneByTypename('Pyroxeres')
-        //        $res = $this->cosmicManager->test(16);
-        //        var_dump( \Doctrine\Common\Util\Debug::export($res, 4));
-        //        $this->logger->notice($res->getCosmicMain()->getGroupNameDe());
-        //$this->logger->notice(var_export($res, true));
-        //echo('<pre>');
-        //        \Doctrine\Common\Util\Debug::dump($res);
-        //        \Doctrine\Common\Util\Debug::dump($res->getCosmicMain()->getType());
-        //        \Doctrine\Common\Util\Debug::dump($res);
-        //        $this->logger->notice($res);
-        //        $this->logger->emerg('EMERG');
-        //        $this->logger->alert('ALERT');
-        //        $this->logger->crit('CRIT');
-        //        $this->logger->err('ERR');
-        //        $this->logger->warn('WARN');
-        //        $this->logger->notice('NOTICE');
-        //        $this->logger->info('INFO');
-        //        $this->logger->debug('DEBUG');
     }
 }
